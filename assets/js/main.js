@@ -2,7 +2,7 @@ let cursors;
 let player;
 let platforms;
 let background={};
-
+let enemy;
 let config = {
     type: Phaser.AUTO,
     width: 800,
@@ -38,7 +38,9 @@ function preload ()
     this.load.image("layer1","assets/sprites/background/Layer_0001_8.png");
     this.load.image("layer0","assets/sprites/background/Layer_0000_9.png");
     this.load.image("ground","assets/sprites/platform.png");
-    this.load.spritesheet("dude","assets/character.png",{frameWidth:23,frameHeight:37})
+    this.load.image('platforms',"assets/sprites/inca_back2.png");
+    this.load.spritesheet("dude","assets/character.png",{frameWidth:23,frameHeight:37});
+    this.load.spritesheet("slime","assets/sprites/Slime.png",{frameWidth:320,frameHeight:320})
 }
 
 function create ()
@@ -56,10 +58,20 @@ function create ()
     platforms.create(400, 600, 'ground').setScale(2).refreshBody();
     background.layer1 = this.add.tileSprite(400, 200, 928,793, 'layer1');
     player = this.physics.add.sprite(400, 450, 'dude');
+    enemy = this.physics.add.sprite(600,520,"slime");
     background.layer0 = this.add.tileSprite(400, 200, 928,793, 'layer0');
     player.setScale(2);
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
+    enemy.setCollideWorldBounds(false);
+    enemy.setScale(0.5)
+    console.log(enemy)
+    this.anims.create({
+        key: 'slime',
+        frames:this.anims.generateFrameNumbers('slime',{start:0, end:3}),
+        frameRate: 6,
+        repeat:-1
+    })
     this.anims.create({
         key: 'idle',
         frames: this.anims.generateFrameNumbers('dude',{start:0, end:11}),
@@ -78,49 +90,24 @@ function create ()
         frameRate:8,
         repeat:-1
     });
-
+    enemy.anims.play("slime",true);
+    enemy.body.allowGravity = false;
     this.physics.add.collider(player, platforms);
     cursors = this.input.keyboard.createCursorKeys();
-    //this.physics.world.setBounds(0,0,800,600)
-    //this.cameras.main.startFollow(player, true, 0.05, 0.05);
-    console.log(player)
+
 }
 
 function update ()
 {
     if (cursors.left.isDown)
     {
-        console.log(this.layer0)
+
         //player.body.setVelocityX(); // move left
-        player.anims.play('walk', true); // play walk animation
-        player.flipX= true; // flip the sprite to the left
-        background.layer10.tilePositionX -= 3;
-        background.layer9.tilePositionX -=2.9;
-        background.layer8.tilePositionX -=2.7;
-        background.layer7.tilePositionX -=2.5;
-        background.layer6.tilePositionX -=2.3;
-        background.layer5.tilePositionX -=2.1;
-        background.layer4.tilePositionX -=1.9;
-        background.layer3.tilePositionX -=1.7;
-        background.layer2.tilePositionX -=1.5;
-        background.layer1.tilePositionX -=1.3;
-        background.layer0.tilePositionX -=1.1;
+        moveLeft();
     }
     else if (cursors.right.isDown) {
         //player.body.setVelocityX(); // move right
-        player.anims.play('walk', true); // play walk animatio
-        player.flipX = false; // use the original sprite looking to the right
-        background.layer10.tilePositionX += 3;
-        background.layer9.tilePositionX +=2.9;
-        background.layer8.tilePositionX +=2.7;
-        background.layer7.tilePositionX +=2.5;
-        background.layer6.tilePositionX +=2.3;
-        background.layer5.tilePositionX +=2.1;
-        background.layer4.tilePositionX +=1.9;
-        background.layer3.tilePositionX +=1.7;
-        background.layer2.tilePositionX +=1.5;
-        background.layer1.tilePositionX +=1.3;
-        background.layer0.tilePositionX +=1.1;
+        moveRight();
     }else {
         player.body.setVelocityX(0);
         player.anims.play("idle", true);
@@ -128,12 +115,52 @@ function update ()
     }
     if (cursors.up.isDown  && player.body.touching.down)
     {
-        player.setVelocityY(-300);
+        player.setVelocityY(-500);
 
     }
     if(!player.body.touching.down)
     {
         player.anims.play("jump",true);
     }
+
+}
+
+function moveLeft() {
+    player.anims.play('walk', true); // play walk animation
+    player.flipX= true; // flip the sprite to the left
+    background.layer10.tilePositionX -= 3;
+    background.layer9.tilePositionX -=1.3;
+    background.layer8.tilePositionX -=2.7;
+    background.layer7.tilePositionX -=2.5;
+    background.layer6.tilePositionX -=1.7;
+    background.layer5.tilePositionX -=2.1;
+    background.layer4.tilePositionX -=1.9;
+    background.layer3.tilePositionX -=2.3;
+    background.layer2.tilePositionX -=1.5;
+    background.layer1.tilePositionX -=2.9;
+    background.layer0.tilePositionX -=3.5;
+    enemy.x += 3.5
+
+}
+
+function moveRight() {
+    player.anims.play('walk', true); // play walk animatio
+    player.flipX = false; // use the original sprite looking to the right
+    background.layer10.tilePositionX += 3;
+    background.layer9.tilePositionX +=1.3;
+    background.layer8.tilePositionX +=2.7;
+    background.layer7.tilePositionX +=2.5;
+    background.layer6.tilePositionX +=1.7;
+    background.layer5.tilePositionX +=2.1;
+    background.layer4.tilePositionX +=1.9;
+    background.layer3.tilePositionX +=2.3;
+    background.layer2.tilePositionX +=1.5;
+    background.layer1.tilePositionX +=2.9;
+    background.layer0.tilePositionX +=3.5;
+    enemy.x -= 3.5
+}
+
+function enemyMovement(enemy) {
+
 
 }
