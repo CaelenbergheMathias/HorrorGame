@@ -62,18 +62,14 @@ function create() {
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
-    let enemy = this.physics.add.sprite(600, 520, "slime");
-    enemy.setCollideWorldBounds(false);
-    enemy.setScale(0.5);
+
     this.anims.create({
         key: 'slime',
         frames: this.anims.generateFrameNumbers('slime', {start: 0, end: 3}),
         frameRate: 6,
         repeat: -1
     });
-    enemy.anims.play("slime", true);
-    enemy.body.allowGravity = false;
-    enemies.push(enemy);
+    createSlime();
     this.anims.create({
         key: 'idle',
         frames: this.anims.generateFrameNumbers('dude', {start: 0, end: 11}),
@@ -184,4 +180,12 @@ function decreaseSanity() {
 function enemyMovement(enemy, number) {
     enemy.x += number;
 
+}
+function createSlime() {
+    let enemy = thing.physics.add.sprite(600, 520, "slime");
+    enemy.setCollideWorldBounds(false);
+    enemy.setScale(0.5);
+    enemy.anims.play("slime", true);
+    enemy.body.allowGravity = false;
+    enemies.push(enemy);
 }
