@@ -10,7 +10,7 @@ let config = {
         default: 'arcade',
         arcade: {
             gravity: {y: 500},
-            debug: true
+            debug: false
         }
     },
     scene: {
@@ -24,7 +24,11 @@ let game = new Phaser.Game(config);
 let playerSanity = 2500;
 const startingSanity = 2500;
 let thing;
+let it = [];
+let parts = ["part1",  "part4", "part5", "part6", "part7", "part8", "part10", "part12", "part13", "part14", "part16", "part17", "part18", "part19", "part20"];
+
 function preload() {
+    thing = this;
     this.load.image("layer10", "assets/sprites/background/Layer_0010_1.png");
     this.load.image("layer9", "assets/sprites/background/Layer_0009_2.png");
     this.load.image("layer8", "assets/sprites/background/Layer_0008_3.png");
@@ -39,11 +43,12 @@ function preload() {
     this.load.image("ground", "assets/sprites/platform.png");
     this.load.image('platforms', "assets/sprites/inca_back2.png");
     this.load.spritesheet("dude", "assets/character.png", {frameWidth: 23, frameHeight: 37});
-    this.load.spritesheet("slime", "assets/sprites/Slime.png", {frameWidth: 320, frameHeight: 320})
+    this.load.spritesheet("slime", "assets/sprites/Slime.png", {frameWidth: 320, frameHeight: 320});
+    loadIt();
 }
 
 function create() {
-    thing = this;
+
     platforms = this.physics.add.staticGroup();
     background.layer10 = this.add.tileSprite(400, 200, 928, 793, 'layer10');
     background.layer9 = this.add.tileSprite(400, 200, 928, 793, 'layer9');
@@ -56,7 +61,6 @@ function create() {
     background.layer2 = this.add.tileSprite(400, 200, 928, 793, 'layer2');
     platforms.create(400, 600, 'ground').setScale(2).refreshBody();
     background.layer1 = this.add.tileSprite(400, 200, 928, 793, 'layer1');
-
     player = this.physics.add.sprite(400, 450, 'dude');
     player.setScale(2);
     player.setBounce(0.2);
@@ -91,8 +95,9 @@ function create() {
     this.physics.add.collider(player, platforms);
     cursors = this.input.keyboard.createCursorKeys();
     background.layer0 = this.add.tileSprite(400, 200, 928, 793, 'layer0');
-    console.log(enemies);
-    console.log(player);
+    //console.log(enemies);
+    //console.log(player);
+    createIt();
 }
 
 function update() {
@@ -169,9 +174,9 @@ function increaseSanity() {
 function decreaseSanity() {
     enemies.forEach(function (enemy) {
         //console.log(Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y));
-        if (Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y) < 300) {
+        if (distanceBetween(player, enemy) < 300) {
             playerSanity -= 2;
-            console.log(playerSanity)
+            //console.log(playerSanity)
         }
 
     })
@@ -181,6 +186,11 @@ function enemyMovement(enemy, number) {
     enemy.x += number;
 
 }
+
+function distanceBetween(one, two) {
+    return Phaser.Math.Distance.Between(one.x, one.y, two.x, two.y)
+}
+
 function createSlime() {
     let enemy = thing.physics.add.sprite(600, 520, "slime");
     enemy.setCollideWorldBounds(false);
@@ -188,4 +198,103 @@ function createSlime() {
     enemy.anims.play("slime", true);
     enemy.body.allowGravity = false;
     enemies.push(enemy);
+}
+
+function loadIt() {
+    thing.load.spritesheet("part1", "assets/sprites/it/1_magicspell_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part2", "assets/sprites/it/2_magic8_spritesheet.png", {frameWidth: 100, frameHeight: 100});
+    thing.load.spritesheet("part3", "assets/sprites/it/3_bluefire_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part4", "assets/sprites/it/4_casting_spritesheet.png", {frameWidth: 100, frameHeight: 100});
+    thing.load.spritesheet("part5", "assets/sprites/it/5_magickahit_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part6", "assets/sprites/it/6_flamelash_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part7", "assets/sprites/it/7_firespin_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part8", "assets/sprites/it/8_protectioncircle_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part10", "assets/sprites/it/10_weaponhit_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part12", "assets/sprites/it/12_nebula_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part13", "assets/sprites/it/13_vortex_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part14", "assets/sprites/it/14_phantom_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part15", "assets/sprites/it/15_loading_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part16", "assets/sprites/it/16_sunburn_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part17", "assets/sprites/it/17_felspell_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part18", "assets/sprites/it/18_midnight_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part19", "assets/sprites/it/19_freezing_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+    thing.load.spritesheet("part20", "assets/sprites/it/20_magicbubbles_spritesheet.png", {
+        frameWidth: 100,
+        frameHeight: 100
+    });
+
+}
+
+function createIt() {
+    parts.forEach(function (part) {
+        //console.log(part);
+        thing.anims.create({
+            key: part,
+            frames: thing.anims.generateFrameNumbers(part, {start: 0, end: 60}),
+            frameRate: 15,
+            repeat: -1
+        });
+    })
+    let height = 540;
+    for (let i = 0; i < 60; i++) {
+
+        let selectedPart = parts[Math.floor((Math.random() * parts.length))];
+        let part = thing.physics.add.sprite(50+Math.floor((Math.random()*50)-25), height, selectedPart);
+        it.push(part);
+        console.log(i % 10);
+        part.anims.play(selectedPart, true);
+        part.body.allowGravity = false;
+        part.setScale(2);
+
+        if (i % 5 === 0&& i !==0) {
+            height -= 50;
+        }
+
+    }
+
 }
