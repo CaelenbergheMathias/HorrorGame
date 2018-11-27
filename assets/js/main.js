@@ -23,7 +23,7 @@ let enemies = [];
 let game = new Phaser.Game(config);
 let playerSanity = 2500;
 const startingSanity = 2500;
-
+let thing;
 function preload() {
     this.load.image("layer10", "assets/sprites/background/Layer_0010_1.png");
     this.load.image("layer9", "assets/sprites/background/Layer_0009_2.png");
@@ -43,6 +43,7 @@ function preload() {
 }
 
 function create() {
+    thing = this;
     platforms = this.physics.add.staticGroup();
     background.layer10 = this.add.tileSprite(400, 200, 928, 793, 'layer10');
     background.layer9 = this.add.tileSprite(400, 200, 928, 793, 'layer9');
