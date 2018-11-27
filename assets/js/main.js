@@ -2,7 +2,6 @@ let cursors;
 let player;
 let platforms;
 let background={};
-let enemy;
 let config = {
     type: Phaser.AUTO,
     width: 800,
@@ -20,7 +19,7 @@ let config = {
         update: update
     }
 };
-
+let enemies = [];
 let game = new Phaser.Game(config);
 
 
@@ -58,20 +57,22 @@ function create ()
     platforms.create(400, 600, 'ground').setScale(2).refreshBody();
     background.layer1 = this.add.tileSprite(400, 200, 928,793, 'layer1');
     player = this.physics.add.sprite(400, 450, 'dude');
-    enemy = this.physics.add.sprite(600,520,"slime");
     background.layer0 = this.add.tileSprite(400, 200, 928,793, 'layer0');
     player.setScale(2);
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
+    let enemy = this.physics.add.sprite(600, 520, "slime");
     enemy.setCollideWorldBounds(false);
-    enemy.setScale(0.5)
-    console.log(enemy)
+    enemy.setScale(0.5);
     this.anims.create({
         key: 'slime',
-        frames:this.anims.generateFrameNumbers('slime',{start:0, end:3}),
+        frames: this.anims.generateFrameNumbers('slime', {start: 0, end: 3}),
         frameRate: 6,
-        repeat:-1
-    })
+        repeat: -1
+    });
+    enemy.anims.play("slime", true);
+    enemy.body.allowGravity = false;
+    enemies.push(enemy);
     this.anims.create({
         key: 'idle',
         frames: this.anims.generateFrameNumbers('dude',{start:0, end:11}),
@@ -90,11 +91,11 @@ function create ()
         frameRate:8,
         repeat:-1
     });
-    enemy.anims.play("slime",true);
-    enemy.body.allowGravity = false;
     this.physics.add.collider(player, platforms);
     cursors = this.input.keyboard.createCursorKeys();
 
+    console.log(enemies);
+    console.log(player);
 }
 
 function update ()
