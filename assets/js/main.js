@@ -25,6 +25,8 @@ let playerSanity = 2500;
 const startingSanity = 2500;
 let thing;
 let it = [];
+let itWidth = 40;
+let itMovementCounter =0;
 let parts = ["part1",  "part4", "part5", "part6", "part7", "part8", "part10", "part12", "part13", "part14", "part16", "part17", "part18", "part19", "part20"];
 
 function preload() {
@@ -123,11 +125,26 @@ function update() {
     }
     decreaseSanity();
     increaseSanity();
+    moveEnemies();
 }
 
 function moveLeft() {
     player.anims.play('walk', true); // play walk animation
     player.flipX = true; // flip the sprite to the left
+    moveBackgroundLeft();
+    itMovementCounter+=1;
+    if(itMovementCounter>15) {
+        itMovementCounter=0;
+        moveItCloser();
+    }
+    enemies.forEach(function (enemy) {
+        enemyMovement(enemy, 3.5)
+    });
+
+
+}
+
+function moveBackgroundLeft() {
     background.layer10.tilePositionX -= 3;
     background.layer9.tilePositionX -= 1.3;
     background.layer8.tilePositionX -= 2.7;
@@ -139,16 +156,18 @@ function moveLeft() {
     background.layer2.tilePositionX -= 1.5;
     background.layer1.tilePositionX -= 2.9;
     background.layer0.tilePositionX -= 3.5;
-    enemies.forEach(function (enemy) {
-        enemyMovement(enemy, 3.5)
-    });
-
-
 }
 
 function moveRight() {
     player.anims.play('walk', true); // play walk animatio
     player.flipX = false; // use the original sprite looking to the right
+    moveBackgroundRight()
+    enemies.forEach(function (enemy) {
+        enemyMovement(enemy, -3.5)
+    });
+}
+
+function moveBackgroundRight() {
     background.layer10.tilePositionX += 3;
     background.layer9.tilePositionX += 1.3;
     background.layer8.tilePositionX += 2.7;
@@ -160,9 +179,6 @@ function moveRight() {
     background.layer2.tilePositionX += 1.5;
     background.layer1.tilePositionX += 2.9;
     background.layer0.tilePositionX += 3.5;
-    enemies.forEach(function (enemy) {
-        enemyMovement(enemy, -3.5)
-    });
 }
 
 function increaseSanity() {
@@ -192,7 +208,7 @@ function distanceBetween(one, two) {
 }
 
 function createSlime() {
-    let enemy = thing.physics.add.sprite(600, 520, "slime");
+    let enemy = thing.physics.add.sprite(800, 520, "slime");
     enemy.setCollideWorldBounds(false);
     enemy.setScale(0.5);
     enemy.anims.play("slime", true);
@@ -279,12 +295,37 @@ function createIt() {
             frameRate: 15,
             repeat: -1
         });
+    });
+    newLayerToIt();
+    itWidth+=25;
+
+}
+
+function moveItCloser() {
+    let newLayer = false;
+    it.forEach(function (part) {
+        part.x += 1;
+        if(part.x > itWidth)
+        {
+            itWidth+=25;
+            newLayer = true;
+        }
     })
+
+    if(newLayer)
+    {
+        newLayerToIt();
+    }
+}
+
+function newLayerToIt()
+{
     let height = 540;
+
     for (let i = 0; i < 60; i++) {
 
         let selectedPart = parts[Math.floor((Math.random() * parts.length))];
-        let part = thing.physics.add.sprite(50+Math.floor((Math.random()*50)-25), height, selectedPart);
+        let part = thing.physics.add.sprite(itWidth+Math.floor((Math.random()*50)-25), height, selectedPart);
         it.push(part);
         console.log(i % 10);
         part.anims.play(selectedPart, true);
@@ -296,5 +337,17 @@ function createIt() {
         }
 
     }
-
 }
+
+function moveEnemies()
+{
+enemies.forEach(function (enemy) {
+    enemyMovement(enemy,-1);
+    if(enemy.x<itWidth)
+    {
+        enemy.destroy();
+    }
+
+})
+}
+
