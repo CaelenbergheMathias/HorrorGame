@@ -41,11 +41,12 @@ let paused = true;
 let pause;
 
 function preload() {
+    document.getElementById("music").volume = 0.01;
     let p = document.createElement("p");
     p.innerText= "Use cursor keys to run and jump";
     document.getElementById("body").appendChild(p);
     p = document.createElement("p");
-    p.innerText = "Your score is based on your sanity";
+    p.innerText = "Your score is based on your sanity, get to close to the enemies and you'll lose sanity";
     document.getElementById("body").appendChild(p);
     p = document.createElement("p");
     p.innerText = "If your sanity becomes 0, you get hit or It That Chases You gets to close it's game over!";
@@ -53,6 +54,15 @@ function preload() {
     p = document.createElement("p");
     p.innerText = "After a Game Over the game wil reset after 5 seconds.";
     document.getElementById("body").appendChild(p);
+    p = document.createElement("p");
+    p.innerText = "Song 'Screech Owl Waltz' by Mike Oscar Foxtrot, all rights reserved.";
+    document.getElementById("body").appendChild(p);
+    let a = document.createElement("a");
+    let div = document.createElement("div");
+    div.appendChild(a);
+    a.innerText = "Screech Owl Waltz";
+    a.href = "https://archive.org/details/ScreechOwlWaltz";
+    document.getElementById("body").appendChild(div);
     thing = this;
     this.load.image("layer10", "assets/sprites/background/Layer_0010_1.png");
     this.load.image("layer9", "assets/sprites/background/Layer_0009_2.png");
@@ -170,13 +180,14 @@ function update() {
         player.setAccelerationX(0);
         player.setVelocityY(0);
         //enemies.forEach(e => e.anims.stop());
+        document.getElementById("music").pause();
     }
     else
     {
         player.anims.resume();
         player.body.allowGravity = true;
         thing.anims.resumeAll();
-
+        document.getElementById("music").play();
     }
 
     if(!paused) {
