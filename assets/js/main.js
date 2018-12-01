@@ -42,7 +42,16 @@ let pause;
 
 function preload() {
     let p = document.createElement("p");
-    p.innerText= "User cursor keys to run and jump";
+    p.innerText= "Use cursor keys to run and jump";
+    document.getElementById("body").appendChild(p);
+    p = document.createElement("p");
+    p.innerText = "Your score is based on your sanity";
+    document.getElementById("body").appendChild(p);
+    p = document.createElement("p");
+    p.innerText = "If your sanity becomes 0, you get hit or It That Chases You gets to close it's game over!";
+    document.getElementById("body").appendChild(p);
+    p = document.createElement("p");
+    p.innerText = "After a Game Over the game wil reset after 5 seconds.";
     document.getElementById("body").appendChild(p);
     thing = this;
     this.load.image("layer10", "assets/sprites/background/Layer_0010_1.png");
@@ -224,7 +233,7 @@ function moveLeft() {
     player.flipX = true; // flip the sprite to the left
     moveBackgroundLeft();
     itMovementCounter += 1;
-    if (itMovementCounter > 15) {
+    if (itMovementCounter > 35) {
         itMovementCounter = 0;
         moveItCloser();
     }
@@ -280,6 +289,10 @@ function sanityStuff() {
     increaseSanity();
     decreaseSanity();
     sanityText.setText("Sanity: " + playerSanity);
+    if(playerSanity<=startingSanity/4)
+    {
+        itMovementCounter += 1;
+    }
     if(playerSanity <= 0)
     {
         player.isDead = true;
@@ -530,6 +543,8 @@ function gameOver() {
     paused = true;
     pause = "";
     triggered = true;
+    ground.create(400, 300, 'ground').setScale(2).refreshBody();
+    let gameover = thing.add.text(100, 285, 'Game Over, Your score is: '+score, {fontSize: '32px', fill: '#fff'});
     localforage.getItem("highscore").then(function (value) {
         if(value === null || value<score)
         {
