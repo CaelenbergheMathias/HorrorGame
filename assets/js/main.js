@@ -19,17 +19,31 @@ let config = {
         update: update
     }
 };
+let score = 0;
+let scoreCount = 0;
 let enemies = [];
 let game = new Phaser.Game(config);
-let playerSanity = 2500;
-const startingSanity = 2500;
+let triggered = false;
+let sanityText;
+let scoreText;
+let highscoreText;
+let highscore =0;
+const startingSanity = 1000;
+let playerSanity = startingSanity;
 let thing;
 let it = [];
 let itWidth = 40;
-let itMovementCounter =0;
-let parts = ["part1",  "part4", "part5", "part6", "part7", "part8", "part10", "part12", "part13", "part14", "part16", "part17", "part18", "part19", "part20"];
+let itMovementCounter = 0;
+let parts = ["part1", "part4", "part5", "part6", "part7", "part8", "part10", "part12", "part13", "part14", "part16", "part17", "part18", "part19", "part20"];
+let spawns = ["slime", "wraith"];
+let ground;
+let paused = true;
+let pause;
 
 function preload() {
+    let p = document.createElement("p");
+    p.innerText= "User cursor keys to run and jump";
+    document.getElementById("body").appendChild(p);
     thing = this;
     this.load.image("layer10", "assets/sprites/background/Layer_0010_1.png");
     this.load.image("layer9", "assets/sprites/background/Layer_0009_2.png");
@@ -43,15 +57,16 @@ function preload() {
     this.load.image("layer1", "assets/sprites/background/Layer_0001_8.png");
     this.load.image("layer0", "assets/sprites/background/Layer_0000_9.png");
     this.load.image("ground", "assets/sprites/platform.png");
-    this.load.image('platforms', "assets/sprites/inca_back2.png");
+    this.load.image('platforms', "assets/sprites/Tile_02_A.png");
     this.load.spritesheet("dude", "assets/character.png", {frameWidth: 23, frameHeight: 37});
     this.load.spritesheet("slime", "assets/sprites/Slime.png", {frameWidth: 320, frameHeight: 320});
+    this.load.spritesheet("wraith", "assets/sprites/Wraith.png", {frameWidth: 48, frameHeight: 48});
     loadIt();
 }
 
 function create() {
-
     platforms = this.physics.add.staticGroup();
+    ground = this.physics.add.staticGroup();
     background.layer10 = this.add.tileSprite(400, 200, 928, 793, 'layer10');
     background.layer9 = this.add.tileSprite(400, 200, 928, 793, 'layer9');
     background.layer8 = this.add.tileSprite(400, 200, 928, 793, 'layer8');
@@ -61,13 +76,15 @@ function create() {
     background.layer4 = this.add.tileSprite(400, 200, 928, 793, 'layer4');
     background.layer3 = this.add.tileSprite(400, 200, 928, 793, 'layer3');
     background.layer2 = this.add.tileSprite(400, 200, 928, 793, 'layer2');
-    platforms.create(400, 600, 'ground').setScale(2).refreshBody();
+    ground.create(400, 600, 'ground').setScale(2).refreshBody();
     background.layer1 = this.add.tileSprite(400, 200, 928, 793, 'layer1');
     player = this.physics.add.sprite(400, 450, 'dude');
     player.setScale(2);
     player.setBounce(0.2);
-    player.setCollideWorldBounds(true);
-
+    player.setCollideWorldBounds(false);
+    player.isDead = false;
+    player.name = "player";
+    createPlatform();
 
     this.anims.create({
         key: 'slime',
@@ -75,7 +92,12 @@ function create() {
         frameRate: 6,
         repeat: -1
     });
-    createSlime();
+    this.anims.create({
+        key: 'wraith',
+        frames: this.anims.generateFrameNumbers('wraith', {start: 0, end: 3}),
+        frameRate: 6,
+        repeat: -1
+    });
     this.anims.create({
         key: 'idle',
         frames: this.anims.generateFrameNumbers('dude', {start: 0, end: 11}),
@@ -94,49 +116,119 @@ function create() {
         frameRate: 8,
         repeat: -1
     });
+
     this.physics.add.collider(player, platforms);
+    this.physics.add.collider(player, ground);
     cursors = this.input.keyboard.createCursorKeys();
+    pause = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     background.layer0 = this.add.tileSprite(400, 200, 928, 793, 'layer0');
     //console.log(enemies);
-    //console.log(player);
+    console.log(player);
     createIt();
+    player.body.setVelocityX(0);
+    player.anims.play("idle", false);
+    sanityText = this.add.text(250, 16, 'Sanity: ' + playerSanity, {fontSize: '18px', fill: '#fff'});
+    scoreText = this.add.text(400, 16, 'Score: ' + score, {fontSize: '18px', fill: '#fff'});
+    localforage.getItem("highscore").then(function (value) {
+        if(value===null)
+        {
+            highscoreText = thing.add.text(600, 16, 'Highscore: ' + 0, {fontSize: '18px', fill: '#fff'});
+
+        }else
+        {
+            highscore = value;
+            highscoreText = thing.add.text(600, 16, 'Highscore: ' + value, {fontSize: '18px', fill: '#fff'});
+
+        }
+
+
+    })
+
 }
 
 function update() {
-    if (cursors.left.isDown) {
+    if(pause.isDown)
+    {
+        paused = !paused;
 
-        //player.body.setVelocityX(); // move left
-        moveLeft();
-    }
-    else if (cursors.right.isDown) {
-        //player.body.setVelocityX(); // move right
-        moveRight();
-    } else {
-        player.body.setVelocityX(0);
-        player.anims.play("idle", true);
 
     }
-    if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(-500);
+    if(paused)
+    {
+        thing.anims.pauseAll();
+        player.body.allowGravity = false;
+        player.setVelocityX(0);
+        player.setAccelerationX(0);
+        player.setVelocityY(0);
+        //enemies.forEach(e => e.anims.stop());
+    }
+    else
+    {
+        player.anims.resume();
+        player.body.allowGravity = true;
+        thing.anims.resumeAll();
 
     }
-    if (!player.body.touching.down) {
-        player.anims.play("jump", true);
+
+    if(!paused) {
+        if (cursors.left.isDown) {
+
+            //player.body.setVelocityX(); // move left
+            moveLeft();
+        }
+        else if (cursors.right.isDown) {
+            //player.body.setVelocityX(); // move right
+            moveRight();
+        } else {
+            player.body.setVelocityX(0);
+            player.anims.play("idle", true);
+
+        }
+        if (cursors.up.isDown && player.body.touching.down) {
+            player.setVelocityY(-500);
+
+        }
+        if (!player.body.touching.down) {
+            player.anims.play("jump", true);
+        }
+        sanityStuff();
+        moveEnemies();
+        movePlatforms(-2);
+        spawnEnemy();
+        spawnPlatform();
+        scoreCount++;
+        if (scoreCount > 25) {
+            score += playerSanity;
+            scoreText.setText("Score: " + score);
+            scoreCount = 0;
+            setHighscore();
+
+        }
     }
-    decreaseSanity();
-    increaseSanity();
-    moveEnemies();
+    if(player.isDead && !triggered)
+    {
+        gameOver();
+    }
+}
+
+function setHighscore() {
+    if(score>highscore)
+    {
+        highscoreText.setText("Highscore: "+score);
+    }
+
 }
 
 function moveLeft() {
     player.anims.play('walk', true); // play walk animation
     player.flipX = true; // flip the sprite to the left
     moveBackgroundLeft();
-    itMovementCounter+=1;
-    if(itMovementCounter>15) {
-        itMovementCounter=0;
+    itMovementCounter += 1;
+    if (itMovementCounter > 15) {
+        itMovementCounter = 0;
         moveItCloser();
     }
+    movePlatforms(5);
     enemies.forEach(function (enemy) {
         enemyMovement(enemy, 3.5)
     });
@@ -161,10 +253,13 @@ function moveBackgroundLeft() {
 function moveRight() {
     player.anims.play('walk', true); // play walk animatio
     player.flipX = false; // use the original sprite looking to the right
-    moveBackgroundRight()
+    moveBackgroundRight();
+    movePlatforms(-5);
     enemies.forEach(function (enemy) {
         enemyMovement(enemy, -3.5)
     });
+
+
 }
 
 function moveBackgroundRight() {
@@ -181,6 +276,16 @@ function moveBackgroundRight() {
     background.layer0.tilePositionX += 3.5;
 }
 
+function sanityStuff() {
+    increaseSanity();
+    decreaseSanity();
+    sanityText.setText("Sanity: " + playerSanity);
+    if(playerSanity <= 0)
+    {
+        player.isDead = true;
+    }
+}
+
 function increaseSanity() {
     if (playerSanity < startingSanity) {
         playerSanity++;
@@ -190,8 +295,17 @@ function increaseSanity() {
 function decreaseSanity() {
     enemies.forEach(function (enemy) {
         //console.log(Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y));
-        if (distanceBetween(player, enemy) < 300) {
+        let distance = distanceBetween(player, enemy);
+        if(enemy.name==="wraith" && distance<40)
+        {
+            player.isDead =true;
+        }else if(enemy.name==="slime" && distance<70)
+        {
+            player.isDead = true;
+        }
+        if (distance < 225) {
             playerSanity -= 2;
+
             //console.log(playerSanity)
         }
 
@@ -211,9 +325,27 @@ function createSlime() {
     let enemy = thing.physics.add.sprite(800, 520, "slime");
     enemy.setCollideWorldBounds(false);
     enemy.setScale(0.5);
-    enemy.anims.play("slime", true);
+    enemy.anims.play("slime");
+    enemy.name = "slime";
     enemy.body.allowGravity = false;
     enemies.push(enemy);
+}
+
+function createWraith() {
+    let enemy;
+    if((Math.round(Math.random())===0)) {
+        enemy = thing.physics.add.sprite(800, 300, "wraith");
+    }else
+    {
+        enemy = thing.physics.add.sprite(800, 100, "wraith");
+    }
+    enemy.setCollideWorldBounds(false);
+    enemy.setScale(2);
+    enemy.anims.play("wraith");
+    enemy.body.allowGravity = false;
+    enemy.name = "wraith";
+    enemies.push(enemy);
+
 }
 
 function loadIt() {
@@ -297,7 +429,8 @@ function createIt() {
         });
     });
     newLayerToIt();
-    itWidth+=25;
+    itWidth += 25;
+
 
 }
 
@@ -305,49 +438,107 @@ function moveItCloser() {
     let newLayer = false;
     it.forEach(function (part) {
         part.x += 1;
-        if(part.x > itWidth)
-        {
-            itWidth+=25;
+        if (part.x > itWidth) {
+            itWidth += 25;
             newLayer = true;
         }
-    })
+    });
 
-    if(newLayer)
-    {
+    if (newLayer) {
         newLayerToIt();
     }
 }
 
-function newLayerToIt()
-{
+function newLayerToIt() {
     let height = 540;
 
     for (let i = 0; i < 60; i++) {
 
         let selectedPart = parts[Math.floor((Math.random() * parts.length))];
-        let part = thing.physics.add.sprite(itWidth+Math.floor((Math.random()*50)-25), height, selectedPart);
+        let part = thing.physics.add.sprite(itWidth + Math.floor((Math.random() * 50) - 25), height, selectedPart);
         it.push(part);
-        console.log(i % 10);
-        part.anims.play(selectedPart, true);
+        //console.log(i % 10);
+        part.anims.play(selectedPart);
         part.body.allowGravity = false;
         part.setScale(2);
 
-        if (i % 5 === 0&& i !==0) {
+        if (i % 5 === 0 && i !== 0) {
             height -= 50;
         }
 
     }
+    console.log(itWidth);
+    if(itWidth>=340)
+    {
+        player.isDead = true;
+    }
 }
 
-function moveEnemies()
-{
-enemies.forEach(function (enemy) {
-    enemyMovement(enemy,-1);
-    if(enemy.x<itWidth)
-    {
-        enemy.destroy();
-    }
+function moveEnemies() {
+    enemies.forEach(function (enemy) {
+        enemyMovement(enemy, -1);
+        if (enemy.x < itWidth+20) {
+            enemy.destroy();
+            enemies.splice(enemies.indexOf(enemy),1);
+        }
 
-})
+    })
+}
+
+function movePlatforms(amount) {
+    platforms.children.entries.forEach(function (platform) {
+        platform.x += amount;
+        platform.body.position.x += amount;
+        if (platform.x < itWidth+20) {
+            platform.destroy();
+
+        }
+    })
+}
+
+function createPlatform(height) {
+    platforms.create(800, height, "platforms").setScale(0.03).refreshBody();
+    //console.log(platforms.children.entries)
+}
+
+function spawnPlatform() {
+    if (Math.floor((Math.random() * 60) + 1) < 2) {
+        if((Math.round(Math.random())===0))
+        {
+            createPlatform(400);
+        }else
+        {
+            createPlatform(200)
+        }
+    }
+}
+
+function spawnEnemy() {
+    if (Math.floor((Math.random() * 75)) < 1 && enemies.length<5) {
+        switch (spawns[Math.floor(Math.random() * spawns.length)]) {
+            case "slime":
+                createSlime();
+                break;
+            case "wraith":
+                createWraith();
+                break;
+        }
+    }
+}
+
+function gameOver() {
+    paused = true;
+    pause = "";
+    triggered = true;
+    localforage.getItem("highscore").then(function (value) {
+        if(value === null || value<score)
+        {
+            localforage.setItem("highscore",score)
+        }
+
+    }).then(function () {
+        setTimeout(function(){location.reload()},5000);
+    });
+
 }
 
